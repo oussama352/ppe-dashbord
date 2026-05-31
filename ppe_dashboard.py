@@ -43,9 +43,9 @@ prenoms_garcons = ["Khalid","Youssef","Hassan","Amine","Mehdi","Bilal","Adil","O
                    "Soufiane","Othmane","Ilias","Anass","Hamza","Saad","Rayan","Zakaria"]
 
 pre_f  = [5,7,8,6,8,6,9,7,6,5,8,6,5,7,8,6]
-post_f = [15,15,16,13,16,14,17,15,13,12,16,14,11,15,16,13]
+post_f = [15,15,16,13,16,14,17,15,13,12,16,14,8,9,16,13]
 pre_g  = [6,8,5,7,7,5,8,6,6,7,9,7,8,6,8,7]
-post_g = [14,16,12,14,15,12,16,13,13,14,17,14,16,12,15,13]
+post_g = [14,16,7,14,15,12,16,8,13,14,17,14,9,12,15,13]
 
 df_f = pd.DataFrame({"Nom": prenoms_filles,  "Genre": "Filles",  "Pré-test": pre_f,  "Post-test": post_f})
 df_g = pd.DataFrame({"Nom": prenoms_garcons, "Genre": "Garçons", "Pré-test": pre_g,  "Post-test": post_g})
@@ -84,8 +84,6 @@ with st.sidebar:
 df_filtered = df.copy()
 if filtre_genre and filtre_genre != "Tous": df_filtered = df_filtered[df_filtered["Genre"] == filtre_genre]
 if filtre_niveau and filtre_niveau != "Tous": df_filtered = df_filtered[df_filtered["Niveau"] == filtre_niveau]
-if filtre_niveau == "Difficultés" and len(df_filtered) < 2:
-    df_filtered = df[df["Niveau"] == "Difficultés"].head(4)
 
 # ── Header ────────────────────────────────────────────────────────────────────
 st.markdown("# 🔬 Tableau de bord – Projet Professionnel de l'Étudiant")
