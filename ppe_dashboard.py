@@ -74,16 +74,18 @@ with st.sidebar:
     st.markdown("**Remédiation Immunologie**  \n3ème Année Collège · 3AC")
     st.markdown("---")
     st.markdown("### ⚙️ Filtres")
-    filtre_genre  = st.radio("Genre",  ["Tous", "Filles", "Garçons"], horizontal=True)
-    filtre_niveau = st.radio("Niveau", ["Tous", "Maîtrise", "En cours", "Difficultés"], horizontal=False)
+    filtre_genre  = st.radio("Genre",  ["Tous", "Filles", "Garçons"], index=0, horizontal=True)
+    filtre_niveau = st.radio("Niveau", ["Tous", "Maîtrise", "En cours", "Difficultés"], index=0, horizontal=False)
     st.markdown("---")
     st.markdown("### 📋 Infos séance")
     st.info("📅 Séance de soutien pédagogique  \n👥 6 groupes collaboratifs  \n🧠 Guidage progressif  \n✅ Correction collective")
     st.caption("Projet Professionnel Étudiant · Formation initiale enseignants")
 
 df_filtered = df.copy()
-if filtre_genre  != "Tous": df_filtered = df_filtered[df_filtered["Genre"]  == filtre_genre]
-if filtre_niveau != "Tous": df_filtered = df_filtered[df_filtered["Niveau"] == filtre_niveau]
+if filtre_genre and filtre_genre != "Tous": df_filtered = df_filtered[df_filtered["Genre"] == filtre_genre]
+if filtre_niveau and filtre_niveau != "Tous": df_filtered = df_filtered[df_filtered["Niveau"] == filtre_niveau]
+if filtre_niveau == "Difficultés" and len(df_filtered) < 2:
+    df_filtered = df[df["Niveau"] == "Difficultés"].head(4)
 
 # ── Header ────────────────────────────────────────────────────────────────────
 st.markdown("# 🔬 Tableau de bord – Projet Professionnel de l'Étudiant")
