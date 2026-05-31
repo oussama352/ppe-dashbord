@@ -263,9 +263,12 @@ with tabs[1]:
             marker=dict(size=10, symbol="circle"),
             text=[f"{v}" for v in scores_g_s], textposition="bottom center"
         ))
-        # Marquer la séance sélectionnée
-        fig_line.add_vline(x=selected_seance, line_dash="dash", line_color=color_sel,
-                           annotation_text=f"← {selected_seance}", annotation_position="top right")
+        # Marquer la séance sélectionnée avec un marker plus grand
+        fig_line.add_trace(go.Scatter(
+            x=[selected_seance], y=[scores_f_s[idx]],
+            mode="markers", marker=dict(size=18, color=color_sel, symbol="star"),
+            showlegend=False, name=""
+        ))
         fig_line.add_hrect(y0=14, y1=21, fillcolor="rgba(46,158,107,0.08)", line_width=0)
         fig_line.add_hrect(y0=10, y1=14, fillcolor="rgba(232,124,53,0.06)", line_width=0)
         fig_line.add_hrect(y0=0,  y1=10, fillcolor="rgba(224,78,57,0.06)",  line_width=0)
@@ -289,8 +292,7 @@ with tabs[1]:
         fig_stack.add_trace(go.Bar(name="🟢 Maîtrise", x=seances_labels, y=maitrise_s,
                                    marker_color="#2E9E6B", marker_line_width=0,
                                    text=maitrise_s, textposition="inside", textfont=dict(color="white",size=12)))
-        # Marquer la séance sélectionnée
-        fig_stack.add_vline(x=selected_seance, line_dash="dash", line_color=color_sel, line_width=2)
+
         fig_stack.update_layout(
             title="Répartition niveaux par séance",
             barmode="stack", height=340,
