@@ -324,6 +324,81 @@ with tabs[1]:
     st.markdown('<div class="insight-box"><b>Comment lire :</b> Rouge = difficultes · Jaune = en cours · Vert = maitrise. Chaque ligne = une seance · Chaque colonne = un eleve.</div>', unsafe_allow_html=True)
 
 
+
+# ══ TAB FILLES VS GARCONS ═════════════════════════════════════════════════════
+with tabs[2]:
+    st.markdown('<div class="section-header">Comparaison Filles / Garcons</div>', unsafe_allow_html=True)
+
+    moy_pre_f2  = df_f["Pré-test"].mean()
+    moy_post_f2 = df_f["Post-test"].mean()
+    moy_pre_g2  = df_g["Pré-test"].mean()
+    moy_post_g2 = df_g["Post-test"].mean()
+
+    mf1,mf2,mg1,mg2 = st.columns(4)
+    with mf1: st.markdown(f'<div class="kpi-card" style="border-left-color:#E04E39"><div class="kpi-label">Filles - Pre-test</div><div class="kpi-value">{moy_pre_f2:.1f}/20</div></div>', unsafe_allow_html=True)
+    with mf2: st.markdown(f'<div class="kpi-card green" style="border-left-color:#E04E39"><div class="kpi-label">Filles - Post-test</div><div class="kpi-value">{moy_post_f2:.1f}/20</div><div class="kpi-delta delta-up">+{moy_post_f2-moy_pre_f2:.1f} pts</div></div>', unsafe_allow_html=True)
+    with mg1: st.markdown(f'<div class="kpi-card" style="border-left-color:#1B6CA8"><div class="kpi-label">Garcons - Pre-test</div><div class="kpi-value">{moy_pre_g2:.1f}/20</div></div>', unsafe_allow_html=True)
+    with mg2: st.markdown(f'<div class="kpi-card green" style="border-left-color:#1B6CA8"><div class="kpi-label">Garcons - Post-test</div><div class="kpi-value">{moy_post_g2:.1f}/20</div><div class="kpi-delta delta-up">+{moy_post_g2-moy_pre_g2:.1f} pts</div></div>', unsafe_allow_html=True)
+
+    st.markdown("")
+    c1, c2 = st.columns(2)
+    with c1:
+        fig_ev = go.Figure()
+        cats = ["Pre-test", "Post-test"]
+        vals_f = [moy_pre_f2, moy_post_f2]
+        vals_g = [moy_pre_g2, moy_post_g2]
+        fig_ev.add_trace(go.Bar(name="Filles",  x=cats, y=vals_f, marker_color="#E04E39", marker_line_width=0, text=[f"{v:.1f}" for v in vals_f], textposition="outside"))
+        fig_ev.add_trace(go.Bar(name="Garcons", x=cats, y=vals_g, marker_color="#1B6CA8", marker_line_width=0, text=[f"{v:.1f}" for v in vals_g], textposition="outside"))
+        fig_ev.add_hline(y=14, line_dash="dot", line_color="#2E9E6B", annotation_text="Seuil maitrise")
+        fig_ev.update_layout(title="Evolution scores moyens /20", barmode="group", height=320,
+                             plot_bgcolor="white", paper_bgcolor="white",
+                             yaxis=dict(range=[0,22], title="Score /20"),
+                             legend=dict(orientation="h", y=1.15),
+                             margin=dict(t=50,b=10,l=0,r=0))
+        st.plotly_chart(fig_ev, use_container_width=True)
+
+    with c2:
+        prog_f2 = round((moy_post_f2 - moy_pre_f2) / moy_pre_f2 * 100, 1)
+        prog_g2 = round((moy_post_g2 - moy_pre_g2) / moy_pre_g2 * 100, 1)
+        fig_prog = go.Figure()
+        fig_prog.add_trace(go.Bar(name="Filles",  y=["Filles"],  x=[prog_f2], orientation="h", marker_color="#E04E39", marker_line_width=0, text=[f"+{prog_f2}%"], textposition="outside"))
+        fig_prog.add_trace(go.Bar(name="Garcons", y=["Garcons"], x=[prog_g2], orientation="h", marker_color="#1B6CA8", marker_line_width=0, text=[f"+{prog_g2}%"], textposition="outside"))
+        fig_prog.update_layout(title="Taux de progression (%)", barmode="group", height=320,
+                               plot_bgcolor="white", paper_bgcolor="white",
+                               xaxis=dict(range=[0,130]),
+                               showlegend=False, margin=dict(t=50,b=10,l=10,r=60))
+        st.plotly_chart(fig_prog, use_container_width=True)
+
+    fig_violin = go.Figure()
+    fig_violin.add_trace(go.Violin(x=df[df["Genre"]=="Filles"]["Genre"], y=df[df["Genre"]=="Filles"]["Post-test"],
+        name="Filles", fillcolor="rgba(224,78,57,0.3)", line_color="#E04E39",
+        meanline_visible=True, points="all", pointpos=-0.5, jitter=0.3, marker=dict(color="#E04E39",size=7)))
+    fig_violin.add_trace(go.Violin(x=df[df["Genre"]=="Garçons"]["Genre"], y=df[df["Genre"]=="Garçons"]["Post-test"],
+        name="Garcons", fillcolor="rgba(27,108,168,0.3)", line_color="#1B6CA8",
+        meanline_visible=True, points="all", pointpos=0.5, jitter=0.3, marker=dict(color="#1B6CA8",size=7)))
+    fig_violin.add_hline(y=14, line_dash="dot", line_color="#2E9E6B", annotation_text="Seuil maitrise (14/20)", annotation_position="right")
+    fig_violin.add_hline(y=10, line_dash="dot", line_color="#E87C35", annotation_text="Seuil valide (10/20)", annotation_position="right")
+    fig_violin.update_layout(title="Distribution des scores post-test (Violin plot)",
+        height=380, plot_bgcolor="white", paper_bgcolor="white",
+        yaxis=dict(range=[0,20], title="Score post-test /20"),
+        showlegend=False, margin=dict(t=50,b=10,l=0,r=120))
+    st.plotly_chart(fig_violin, use_container_width=True)
+
+    comps_short = ["Axes","Variations","Comparaison","Conclusions"]
+    fig_comp = go.Figure()
+    fig_comp.add_trace(go.Bar(name="Filles",  x=comps_short, y=post_comp_f, marker_color="#E04E39", marker_line_width=0, text=[f"{v}%" for v in post_comp_f], textposition="outside"))
+    fig_comp.add_trace(go.Bar(name="Garcons", x=comps_short, y=post_comp_g, marker_color="#1B6CA8", marker_line_width=0, text=[f"{v}%" for v in post_comp_g], textposition="outside"))
+    fig_comp.add_hline(y=70, line_dash="dot", line_color="#2E9E6B", annotation_text="Seuil 70%")
+    fig_comp.update_layout(title="Taux de maitrise par competence - Filles vs Garcons",
+        barmode="group", height=380, plot_bgcolor="white", paper_bgcolor="white",
+        yaxis=dict(range=[0,110], title="Taux de maitrise (%)"),
+        legend=dict(orientation="h", y=1.12), margin=dict(t=60,b=10,l=0,r=0))
+    st.plotly_chart(fig_comp, use_container_width=True)
+
+    winner = "Filles" if moy_post_f2 > moy_post_g2 else "Garcons"
+    diff_s2 = abs(moy_post_f2 - moy_post_g2)
+    st.markdown(f'<div class="insight-box"><b>Analyse :</b> Les <b>{winner}</b> ont obtenu un score moyen plus eleve au post-test (<b>{max(moy_post_f2,moy_post_g2):.1f}/20</b> vs <b>{min(moy_post_f2,moy_post_g2):.1f}/20</b>). Les deux groupes montrent une <b>progression significative</b> apres la remediation.</div>', unsafe_allow_html=True)
+
 # ══ TAB 3 ════════════════════════════════════════════════════════════════════
 with tabs[3]:
     st.markdown('<div class="section-header">Analyse par compétence ciblée</div>', unsafe_allow_html=True)
