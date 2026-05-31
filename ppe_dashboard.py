@@ -373,8 +373,8 @@ with tabs[3]:
 
     st.dataframe(
         df_show[["Nom","Genre","Pré-test","Post-test","Progression","Prog %","Niveau"]].style
-            .applymap(color_niveau, subset=["Niveau"])
-            .applymap(color_prog, subset=["Progression"])
+            .map(color_niveau, subset=["Niveau"])
+            .map(color_prog, subset=["Progression"])
             .format({"Prog %": "{:.1f}%", "Progression": "+{:.0f} pts"}),
         use_container_width=True, height=450
     )
