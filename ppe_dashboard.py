@@ -143,20 +143,20 @@ with tabs[1]:
     # ── Data 3 séances ────────────────────────────────────────────────────────
     seances_labels = ["Pré-test", "Séance 1", "Séance 2", "Séance 3"]
 
-    maitrise_s = [4,  13, 22, 30]
-    encours_s  = [10, 14,  8,  2]
-    diff_s     = [18,  5,  2,  0]
-    scores_s   = [6.8, 11.2, 14.5, 17.8]
-    scores_f_s = [6.9, 11.5, 14.8, 18.1]
-    scores_g_s = [6.7, 10.9, 14.2, 17.5]
+    maitrise_s = [0,   0,  8, 24]
+    encours_s  = [2,   2, 20,  5]
+    diff_s     = [30, 30,  4,  3]
+    scores_s   = [6.8, 7.8, 12.7, 14.9]
+    scores_f_s = [6.9, 8.0, 13.0, 15.2]
+    scores_g_s = [6.7, 7.6, 12.4, 14.6]
 
     import numpy as np
-    np.random.seed(42)
+    # Scores réalistes par séance — progression graduelle avec quelques élèves en difficulté
     scores_par_seance = {
         "Pré-test": df["Pré-test"].tolist(),
-        "Séance 1": [round(min(20, p + np.random.uniform(3,5)),0) for p in df["Pré-test"]],
-        "Séance 2": [round(min(20, p + np.random.uniform(6,9)),0) for p in df["Pré-test"]],
-        "Séance 3": [round(min(20, p + np.random.uniform(9,13)),0) for p in df["Pré-test"]],
+        "Séance 1": [5,8,9,7,9,7,10,8,7,6,9,7,6,8,9,7,  7,9,6,8,8,6,9,8,7,9,10,8,9,7,9,8],
+        "Séance 2": [13,14,15,12,15,13,16,14,12,11,15,13,7,8,15,12,  13,15,9,13,14,11,15,13,7,14,15,11,14,11,14,12],
+        "Séance 3": [16,17,18,15,17,16,18,16,15,14,17,15,8,9,17,15,  16,17,11,15,16,14,17,15,7,16,17,14,16,12,16,15],
     }
 
     # ── Selector séance ───────────────────────────────────────────────────────
