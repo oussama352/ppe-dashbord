@@ -143,75 +143,157 @@ with tabs[1]:
     # ── Data 3 séances ────────────────────────────────────────────────────────
     seances_labels = ["Pré-test", "Séance 1", "Séance 2", "Séance 3"]
 
-    # Répartition niveaux par séance
     maitrise_s = [4,  13, 22, 30]
-    encours_s  = [10, 14, 8,  2]
-    diff_s     = [18, 5,  2,  0]
-
-    # Scores moyens par séance
+    encours_s  = [10, 14,  8,  2]
+    diff_s     = [18,  5,  2,  0]
     scores_s   = [6.8, 11.2, 14.5, 17.8]
     scores_f_s = [6.9, 11.5, 14.8, 18.1]
     scores_g_s = [6.7, 10.9, 14.2, 17.5]
 
-    # ── KPI évolution ─────────────────────────────────────────────────────────
-    k1,k2,k3,k4 = st.columns(4)
-    with k1: st.markdown('<div class="kpi-card orange"><div class="kpi-label">📉 Pré-test</div><div class="kpi-value">6.8/20</div><div class="kpi-delta delta-down">4 en maîtrise (12%)</div></div>', unsafe_allow_html=True)
-    with k2: st.markdown('<div class="kpi-card"><div class="kpi-label">📗 Séance 1</div><div class="kpi-value">11.2/20</div><div class="kpi-delta delta-up">13 en maîtrise (41%)</div></div>', unsafe_allow_html=True)
-    with k3: st.markdown('<div class="kpi-card"><div class="kpi-label">📘 Séance 2</div><div class="kpi-value">14.5/20</div><div class="kpi-delta delta-up">22 en maîtrise (69%)</div></div>', unsafe_allow_html=True)
-    with k4: st.markdown('<div class="kpi-card green"><div class="kpi-label">🏆 Séance 3</div><div class="kpi-value">17.8/20</div><div class="kpi-delta delta-up">30 en maîtrise (94%)</div></div>', unsafe_allow_html=True)
+    import numpy as np
+    np.random.seed(42)
+    scores_par_seance = {
+        "Pré-test": df["Pré-test"].tolist(),
+        "Séance 1": [round(min(20, p + np.random.uniform(3,5)),0) for p in df["Pré-test"]],
+        "Séance 2": [round(min(20, p + np.random.uniform(6,9)),0) for p in df["Pré-test"]],
+        "Séance 3": [round(min(20, p + np.random.uniform(9,13)),0) for p in df["Pré-test"]],
+    }
+
+    # ── Selector séance ───────────────────────────────────────────────────────
+    st.markdown("### 🎯 Sélectionnez une séance pour voir les détails")
+    col_btns = st.columns(4)
+    seance_noms = ["Pré-test", "Séance 1", "Séance 2", "Séance 3"]
+    seance_icons = ["📋", "1️⃣", "2️⃣", "3️⃣"]
+    seance_colors = ["#6B7280", "#E87C35", "#1B6CA8", "#2E9E6B"]
+
+    selected_seance = st.session_state.get("selected_seance", "Séance 1")
+
+    for i, (nom, icon) in enumerate(zip(seance_noms, seance_icons)):
+        with col_btns[i]:
+            if st.button(f"{icon} {nom}", key=f"btn_{i}", use_container_width=True,
+                         type="primary" if selected_seance == nom else "secondary"):
+                st.session_state["selected_seance"] = nom
+                st.rerun()
+
+    selected_seance = st.session_state.get("selected_seance", "Séance 1")
+    idx = seance_noms.index(selected_seance)
+    scores_sel = scores_par_seance[selected_seance]
+
+    def get_niveau_s(s):
+        if s > 14: return "Maîtrise"
+        if s >= 10: return "En cours"
+        return "Difficultés"
+
+    niveaux_sel = [get_niveau_s(s) for s in scores_sel]
+    n_mait = niveaux_sel.count("Maîtrise")
+    n_enc  = niveaux_sel.count("En cours")
+    n_dif  = niveaux_sel.count("Difficultés")
+    moy_sel = round(sum(scores_sel)/len(scores_sel), 1)
+
+    st.markdown("---")
+    color_sel = seance_colors[idx]
+    st.markdown(f"## {seance_icons[idx]} Résultats — {selected_seance}", unsafe_allow_html=False)
+
+    # ── KPIs de la séance sélectionnée ───────────────────────────────────────
+    k1,k2,k3,k4,k5 = st.columns(5)
+    with k1: st.markdown(f'<div class="kpi-card" style="border-left-color:{color_sel}"><div class="kpi-label">📊 Score moyen</div><div class="kpi-value">{moy_sel}/20</div></div>', unsafe_allow_html=True)
+    with k2: st.markdown(f'<div class="kpi-card green"><div class="kpi-label">🟢 Maîtrise</div><div class="kpi-value">{n_mait}</div><div class="kpi-delta delta-up">{int(n_mait/32*100)}% des élèves</div></div>', unsafe_allow_html=True)
+    with k3: st.markdown(f'<div class="kpi-card orange"><div class="kpi-label">🟡 En cours</div><div class="kpi-value">{n_enc}</div><div class="kpi-delta">{int(n_enc/32*100)}% des élèves</div></div>', unsafe_allow_html=True)
+    with k4: st.markdown(f'<div class="kpi-card" style="border-left-color:#E04E39"><div class="kpi-label">🔴 Difficultés</div><div class="kpi-value">{n_dif}</div><div class="kpi-delta delta-down">{int(n_dif/32*100)}% des élèves</div></div>', unsafe_allow_html=True)
+    with k5:
+        delta_vs_pre = round(moy_sel - scores_s[0], 1)
+        sign = "+" if delta_vs_pre >= 0 else ""
+        st.markdown(f'<div class="kpi-card purple"><div class="kpi-label">🚀 vs Pré-test</div><div class="kpi-value">{sign}{delta_vs_pre}</div><div class="kpi-delta delta-up">progression</div></div>', unsafe_allow_html=True)
 
     st.markdown("")
 
-    # ── Graphe 1 : Évolution score moyen ligne ────────────────────────────────
+    # ── Graphes de la séance ──────────────────────────────────────────────────
+    c1, c2 = st.columns(2)
+
+    with c1:
+        # Donut niveaux séance
+        fig_pie = go.Figure(go.Pie(
+            labels=["🟢 Maîtrise", "🟡 En cours", "🔴 Difficultés"],
+            values=[n_mait, n_enc, n_dif],
+            hole=0.55,
+            marker=dict(colors=["#2E9E6B","#E87C35","#E04E39"]),
+            textinfo="label+value+percent"
+        ))
+        fig_pie.update_layout(
+            title=f"Répartition niveaux — {selected_seance}",
+            height=320, paper_bgcolor="white",
+            annotations=[dict(text=f"{int(n_mait/32*100)}%<br>maîtrise", x=0.5,y=0.5,font_size=13,showarrow=False)],
+            showlegend=False, margin=dict(t=40,b=10,l=10,r=10)
+        )
+        st.plotly_chart(fig_pie, use_container_width=True)
+
+    with c2:
+        # Bar scores individuels colorés par niveau
+        colors_ind = ["#2E9E6B" if s>14 else "#E87C35" if s>=10 else "#E04E39" for s in scores_sel]
+        fig_ind = go.Figure(go.Bar(
+            x=df["Nom"], y=scores_sel,
+            marker_color=colors_ind, marker_line_width=0,
+            text=[f"{int(s)}" for s in scores_sel], textposition="outside"
+        ))
+        fig_ind.add_hline(y=14, line_dash="dot", line_color="#2E9E6B", annotation_text="Maîtrise")
+        fig_ind.add_hline(y=10, line_dash="dot", line_color="#E87C35", annotation_text="Validé")
+        fig_ind.update_layout(
+            title=f"Scores individuels — {selected_seance}",
+            height=320, plot_bgcolor="white", paper_bgcolor="white",
+            yaxis=dict(range=[0,23], title="Score /20"),
+            margin=dict(t=40,b=20,l=0,r=0), font=dict(size=10)
+        )
+        st.plotly_chart(fig_ind, use_container_width=True)
+
+    # ── Évolution globale toutes séances ─────────────────────────────────────
+    st.markdown('<div class="section-header">Evolution sur toutes les seances</div>', unsafe_allow_html=True)
+
     c1, c2 = st.columns(2)
     with c1:
         fig_line = go.Figure()
         fig_line.add_trace(go.Scatter(
             x=seances_labels, y=scores_f_s, mode="lines+markers+text",
             name="Filles", line=dict(color="#E04E39", width=3),
-            marker=dict(size=10), text=[f"{v}" for v in scores_f_s],
-            textposition="top center"
+            marker=dict(size=10, symbol="circle"),
+            text=[f"{v}" for v in scores_f_s], textposition="top center"
         ))
         fig_line.add_trace(go.Scatter(
             x=seances_labels, y=scores_g_s, mode="lines+markers+text",
             name="Garçons", line=dict(color="#1B6CA8", width=3),
-            marker=dict(size=10), text=[f"{v}" for v in scores_g_s],
-            textposition="bottom center"
+            marker=dict(size=10, symbol="circle"),
+            text=[f"{v}" for v in scores_g_s], textposition="bottom center"
         ))
-        fig_line.add_hrect(y0=14, y1=20, fillcolor="rgba(46,158,107,0.08)", line_width=0,
-                           annotation_text="Zone maîtrise", annotation_position="right")
-        fig_line.add_hrect(y0=10, y1=14, fillcolor="rgba(232,124,53,0.08)", line_width=0)
-        fig_line.add_hrect(y0=0, y1=10, fillcolor="rgba(224,78,57,0.06)", line_width=0)
+        # Marquer la séance sélectionnée
+        fig_line.add_vline(x=selected_seance, line_dash="dash", line_color=color_sel,
+                           annotation_text=f"← {selected_seance}", annotation_position="top right")
+        fig_line.add_hrect(y0=14, y1=21, fillcolor="rgba(46,158,107,0.08)", line_width=0)
+        fig_line.add_hrect(y0=10, y1=14, fillcolor="rgba(232,124,53,0.06)", line_width=0)
+        fig_line.add_hrect(y0=0,  y1=10, fillcolor="rgba(224,78,57,0.06)",  line_width=0)
         fig_line.update_layout(
-            title="📈 Évolution du score moyen /20",
-            height=360, plot_bgcolor="white", paper_bgcolor="white",
-            yaxis=dict(range=[0,21], title="Score moyen /20"),
+            title="Évolution score moyen /20",
+            height=340, plot_bgcolor="white", paper_bgcolor="white",
+            yaxis=dict(range=[0,21], title="Score /20"),
             legend=dict(orientation="h", y=1.12),
             margin=dict(t=60,b=10,l=0,r=80)
         )
         st.plotly_chart(fig_line, use_container_width=True)
 
     with c2:
-        # Graphe 2 : Stacked bar niveaux par séance
         fig_stack = go.Figure()
-        fig_stack.add_trace(go.Bar(
-            name="🔴 Difficultés", x=seances_labels, y=diff_s,
-            marker_color="#E04E39", marker_line_width=0,
-            text=diff_s, textposition="inside", textfont=dict(color="white", size=11)
-        ))
-        fig_stack.add_trace(go.Bar(
-            name="🟡 En cours", x=seances_labels, y=encours_s,
-            marker_color="#E87C35", marker_line_width=0,
-            text=encours_s, textposition="inside", textfont=dict(color="white", size=11)
-        ))
-        fig_stack.add_trace(go.Bar(
-            name="🟢 Maîtrise", x=seances_labels, y=maitrise_s,
-            marker_color="#2E9E6B", marker_line_width=0,
-            text=maitrise_s, textposition="inside", textfont=dict(color="white", size=11)
-        ))
+        fig_stack.add_trace(go.Bar(name="🔴 Difficultés", x=seances_labels, y=diff_s,
+                                   marker_color="#E04E39", marker_line_width=0,
+                                   text=diff_s, textposition="inside", textfont=dict(color="white",size=12)))
+        fig_stack.add_trace(go.Bar(name="🟡 En cours", x=seances_labels, y=encours_s,
+                                   marker_color="#E87C35", marker_line_width=0,
+                                   text=encours_s, textposition="inside", textfont=dict(color="white",size=12)))
+        fig_stack.add_trace(go.Bar(name="🟢 Maîtrise", x=seances_labels, y=maitrise_s,
+                                   marker_color="#2E9E6B", marker_line_width=0,
+                                   text=maitrise_s, textposition="inside", textfont=dict(color="white",size=12)))
+        # Marquer la séance sélectionnée
+        fig_stack.add_vline(x=selected_seance, line_dash="dash", line_color=color_sel, line_width=2)
         fig_stack.update_layout(
-            title="👥 Répartition des niveaux par séance",
-            barmode="stack", height=360,
+            title="Répartition niveaux par séance",
+            barmode="stack", height=340,
             plot_bgcolor="white", paper_bgcolor="white",
             yaxis=dict(range=[0,35], title="Nombre d'élèves"),
             legend=dict(orientation="h", y=1.12),
@@ -219,72 +301,25 @@ with tabs[1]:
         )
         st.plotly_chart(fig_stack, use_container_width=True)
 
-    # ── Graphe 3 : Progression % par séance (area chart) ─────────────────────
-    pct_maitrise = [int(m/32*100) for m in maitrise_s]
-    pct_encours  = [int(e/32*100) for e in encours_s]
-    pct_diff     = [int(d/32*100) for d in diff_s]
-
-    fig_area = go.Figure()
-    fig_area.add_trace(go.Scatter(
-        x=seances_labels, y=pct_maitrise, mode="lines+markers",
-        name="🟢 Maîtrise", fill="tozeroy",
-        line=dict(color="#2E9E6B", width=2.5),
-        fillcolor="rgba(46,158,107,0.15)",
-        marker=dict(size=8),
-        text=[f"{v}%" for v in pct_maitrise], textposition="top center"
-    ))
-    fig_area.add_trace(go.Scatter(
-        x=seances_labels, y=pct_encours, mode="lines+markers",
-        name="🟡 En cours",
-        line=dict(color="#E87C35", width=2.5, dash="dot"),
-        marker=dict(size=8),
-        text=[f"{v}%" for v in pct_encours], textposition="top center"
-    ))
-    fig_area.add_trace(go.Scatter(
-        x=seances_labels, y=pct_diff, mode="lines+markers",
-        name="🔴 Difficultés", fill="tozeroy",
-        line=dict(color="#E04E39", width=2.5),
-        fillcolor="rgba(224,78,57,0.1)",
-        marker=dict(size=8),
-        text=[f"{v}%" for v in pct_diff], textposition="bottom center"
-    ))
-    fig_area.update_layout(
-        title="📊 Évolution des taux de maîtrise / en cours / difficultés (%)",
-        height=360, plot_bgcolor="white", paper_bgcolor="white",
-        yaxis=dict(range=[0,110], title="% des élèves"),
-        legend=dict(orientation="h", y=1.12),
-        margin=dict(t=60,b=10,l=0,r=0)
-    )
-    st.plotly_chart(fig_area, use_container_width=True)
-
-    # ── Graphe 4 : Heatmap élèves par séance ──────────────────────────────────
-    st.markdown('<div class="section-header">🗺️ Carte de chaleur — progression individuelle</div>', unsafe_allow_html=True)
-
-    import numpy as np
-    np.random.seed(42)
-    scores_seance1 = [round(p + np.random.uniform(3,5),0) for p in df["Pré-test"]]
-    scores_seance2 = [round(min(20, s + np.random.uniform(2,4)),0) for s in scores_seance1]
-    scores_seance3 = [round(min(20, s + np.random.uniform(1,3)),0) for s in scores_seance2]
-
+    # ── Heatmap individuelle ──────────────────────────────────────────────────
     df_heat = pd.DataFrame({
-        "Nom":      df["Nom"].tolist(),
-        "Pré-test": df["Pré-test"].tolist(),
-        "Séance 1": scores_seance1,
-        "Séance 2": scores_seance2,
-        "Séance 3": scores_seance3,
-    }).set_index("Nom")
+        "Pré-test": scores_par_seance["Pré-test"],
+        "Séance 1": scores_par_seance["Séance 1"],
+        "Séance 2": scores_par_seance["Séance 2"],
+        "Séance 3": scores_par_seance["Séance 3"],
+    }, index=df["Nom"]).T
 
     fig_heat = px.imshow(
-        df_heat.T, text_auto=True, aspect="auto",
+        df_heat, text_auto=True, aspect="auto",
         color_continuous_scale=[[0,"#FEE2E2"],[0.5,"#FEF3C7"],[0.75,"#D1FAE5"],[1,"#065F46"]],
         zmin=0, zmax=20,
         labels=dict(color="Score /20"),
-        title="Score de chaque élève à chaque séance"
+        title="🗺️ Carte de chaleur — progression individuelle (Rouge→Vert)"
     )
     fig_heat.update_layout(height=280, margin=dict(t=40,b=10,l=0,r=0), paper_bgcolor="white")
     st.plotly_chart(fig_heat, use_container_width=True)
 
-    st.markdown('<div class="insight-box"><b>🔍 Lecture du tableau :</b> Rouge = difficultés · Jaune = en cours · Vert clair = acquis · Vert foncé = maîtrise totale. On observe clairement la <b>progression séance par séance</b> de gauche à droite.</div>', unsafe_allow_html=True)
+    st.markdown('<div class="insight-box"><b>Comment lire :</b> Rouge = difficultes · Jaune = en cours · Vert = maitrise. Chaque ligne = une seance · Chaque colonne = un eleve.</div>', unsafe_allow_html=True)
 
 
 # ══ TAB 3 ════════════════════════════════════════════════════════════════════
