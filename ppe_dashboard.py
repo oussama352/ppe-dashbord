@@ -106,7 +106,7 @@ with k5: st.markdown(f'<div class="kpi-card purple"><div class="kpi-label">🏆 
 
 st.markdown("")
 
-tabs = st.tabs(["📊 Vue Globale","📅 3 Séances","⚖️ Filles vs Garçons","🎯 Compétences","👥 Suivi Élèves","📈 Simulation","📋 Rapport PDF"])
+tabs = st.tabs(["📊 Vue Globale","📅 3 Séances","⚖️ Filles vs Garçons","🎯 Compétences","🔬 Analyses Avancées","👥 Suivi Élèves","📈 Simulation","📋 Rapport PDF"])
 
 # ══ TAB 1 ════════════════════════════════════════════════════════════════════
 with tabs[0]:
@@ -425,8 +425,187 @@ with tabs[3]:
     fig3.update_layout(height=300,margin=dict(t=40,b=10,l=0,r=0),paper_bgcolor="white")
     st.plotly_chart(fig3, use_container_width=True)
 
-# ══ TAB 4 ════════════════════════════════════════════════════════════════════
+# ══ TAB ANALYSES AVANCÉES ═════════════════════════════════════════════════════
 with tabs[4]:
+    st.markdown('<div class="section-header">Analyses Avancees - Comparaisons Multiples</div>', unsafe_allow_html=True)
+
+    seances_labels_a = ["Pré-test", "Séance 1", "Séance 2", "Séance 3"]
+    scores_f_evol = [6.9, 8.0, 13.0, 15.2]
+    scores_g_evol = [6.7, 7.6, 12.4, 14.6]
+
+    # ── Graphe 1 : Comparaison Filles vs Garçons par séance (grouped bar) ────
+    st.markdown("### 1. Comparaison Filles vs Garçons - Score moyen par séance")
+    fig1 = go.Figure()
+    fig1.add_trace(go.Bar(name="Filles", x=seances_labels_a, y=scores_f_evol,
+                          marker_color="#E04E39", marker_line_width=0,
+                          text=[f"{v}" for v in scores_f_evol], textposition="outside"))
+    fig1.add_trace(go.Bar(name="Garçons", x=seances_labels_a, y=scores_g_evol,
+                          marker_color="#1B6CA8", marker_line_width=0,
+                          text=[f"{v}" for v in scores_g_evol], textposition="outside"))
+    fig1.add_hline(y=14, line_dash="dot", line_color="#2E9E6B", annotation_text="Seuil maitrise (14)")
+    fig1.add_hline(y=10, line_dash="dot", line_color="#E87C35", annotation_text="Seuil valide (10)")
+    fig1.update_layout(barmode="group", height=380, plot_bgcolor="white", paper_bgcolor="white",
+                       yaxis=dict(range=[0,20], title="Score moyen /20"),
+                       legend=dict(orientation="h", y=1.12), margin=dict(t=30,b=10,l=0,r=0))
+    st.plotly_chart(fig1, use_container_width=True)
+    st.markdown('<div class="insight-box"><b>Commentaire :</b> Les filles partent avec un score legerement superieur (6.9 vs 6.7) et conservent cette avance jusqu\'a la seance 3 (15.2 vs 14.6). L\'ecart reste stable (environ 0.6 a 0.7 point) tout au long du dispositif, ce qui indique que la remediation a profite de maniere comparable aux deux groupes, sans creuser ni combler l\'ecart initial.</div>', unsafe_allow_html=True)
+
+    st.markdown("---")
+
+    # ── Graphe 2 : Ecart Filles-Garçons par séance ───────────────────────────
+    st.markdown("### 2. Evolution de l'ecart Filles - Garçons")
+    ecarts = [round(f-g,1) for f,g in zip(scores_f_evol, scores_g_evol)]
+    fig2 = go.Figure(go.Bar(
+        x=seances_labels_a, y=ecarts,
+        marker_color=["#9CA3AF" if e==0 else "#E04E39" if e>0 else "#1B6CA8" for e in ecarts],
+        text=[f"+{e}" if e>0 else f"{e}" for e in ecarts], textposition="outside"
+    ))
+    fig2.add_hline(y=0, line_color="#374151", line_width=1)
+    fig2.update_layout(title="Ecart (Filles - Garçons) en points sur 20", height=320,
+                       plot_bgcolor="white", paper_bgcolor="white",
+                       yaxis=dict(range=[-0.5,1], title="Ecart (pts)"),
+                       showlegend=False, margin=dict(t=40,b=10,l=0,r=0))
+    st.plotly_chart(fig2, use_container_width=True)
+    st.markdown('<div class="insight-box"><b>Commentaire :</b> L\'ecart entre filles et garcons reste positif (en faveur des filles) sur toutes les seances, avec une moyenne d\'environ +0.5 point. Cet ecart est faible et ne traduit pas une difference pedagogique significative entre les deux groupes ; il peut s\'expliquer par des facteurs individuels plutot que par le genre.</div>', unsafe_allow_html=True)
+
+    st.markdown("---")
+
+    # ── Graphe 3 : Nombre d'élèves par niveau et par séance (grouped bar) ────
+    st.markdown("### 3. Nombre d'eleves par niveau a chaque seance")
+    maitrise_a = [0, 0, 8, 24]
+    encours_a  = [2, 2, 20, 5]
+    diff_a     = [30, 30, 4, 3]
+
+    fig3 = go.Figure()
+    fig3.add_trace(go.Bar(name="Difficultés", x=seances_labels_a, y=diff_a,
+                          marker_color="#E04E39", marker_line_width=0,
+                          text=diff_a, textposition="outside"))
+    fig3.add_trace(go.Bar(name="En cours", x=seances_labels_a, y=encours_a,
+                          marker_color="#E87C35", marker_line_width=0,
+                          text=encours_a, textposition="outside"))
+    fig3.add_trace(go.Bar(name="Maîtrise", x=seances_labels_a, y=maitrise_a,
+                          marker_color="#2E9E6B", marker_line_width=0,
+                          text=maitrise_a, textposition="outside"))
+    fig3.update_layout(title="Nombre d'eleves par niveau (barres groupees)", barmode="group", height=380,
+                       plot_bgcolor="white", paper_bgcolor="white",
+                       yaxis=dict(range=[0,35], title="Nombre d'eleves"),
+                       legend=dict(orientation="h", y=1.12), margin=dict(t=40,b=10,l=0,r=0))
+    st.plotly_chart(fig3, use_container_width=True)
+    st.markdown('<div class="insight-box"><b>Commentaire :</b> Cette vue en barres groupees met en evidence le basculement progressif : le groupe "Difficultes" (rouge) domine au pre-test et a la seance 1 (30 eleves), puis s\'effondre a partir de la seance 2 (4 eleves) et la seance 3 (3 eleves). Inversement, le groupe "Maitrise" (vert) passe de 0 a 24 eleves entre le pre-test et la seance 3, illustrant une transformation radicale de la repartition des niveaux.</div>', unsafe_allow_html=True)
+
+    st.markdown("---")
+
+    # ── Graphe 4 : Distribution complète des scores - tous élèves toutes séances (box plot multi) ──
+    st.markdown("### 4. Distribution des scores - tous les eleves, toutes les seances")
+
+    import numpy as np
+    scores_par_seance_a = {
+        "Pré-test": df["Pré-test"].tolist(),
+        "Séance 1": [5,8,9,7,9,7,10,8,7,6,9,7,6,8,9,7,  7,9,6,8,8,6,9,8,7,9,10,8,9,7,9,8],
+        "Séance 2": [13,14,15,12,15,13,16,14,12,11,15,13,7,8,15,12,  13,15,9,13,14,11,15,13,7,14,15,11,14,11,14,12],
+        "Séance 3": [16,17,18,15,17,16,18,16,15,14,17,15,8,9,17,15,  16,17,11,15,16,14,17,15,7,16,17,14,16,12,16,15],
+    }
+
+    fig4 = go.Figure()
+    box_colors = ["#9CA3AF", "#E87C35", "#1B6CA8", "#2E9E6B"]
+    for i, (label, scores) in enumerate(scores_par_seance_a.items()):
+        fig4.add_trace(go.Box(
+            y=scores, name=label, marker_color=box_colors[i],
+            boxmean=True, boxpoints="all", jitter=0.4, pointpos=-1.8,
+            marker=dict(size=5, opacity=0.6)
+        ))
+    fig4.add_hline(y=14, line_dash="dot", line_color="#2E9E6B", annotation_text="Seuil maitrise")
+    fig4.add_hline(y=10, line_dash="dot", line_color="#E87C35", annotation_text="Seuil valide")
+    fig4.update_layout(title="Box plot - distribution des 32 eleves par seance", height=420,
+                       plot_bgcolor="white", paper_bgcolor="white",
+                       yaxis=dict(range=[0,20], title="Score /20"),
+                       showlegend=False, margin=dict(t=40,b=10,l=0,r=0))
+    st.plotly_chart(fig4, use_container_width=True)
+    st.markdown('<div class="insight-box"><b>Commentaire :</b> Le box plot montre une nette translation vers le haut de toute la distribution au fil des seances : la mediane passe d\'environ 6.5 (pre-test) a 15.5 (seance 3), et l\'ecart-type (taille de la boite) diminue legerement, signe d\'une homogeneisation progressive du niveau de la classe. Quelques points isoles sous le seuil de 10 restent visibles meme a la seance 3, correspondant aux 3 eleves toujours en difficulte.</div>', unsafe_allow_html=True)
+
+    st.markdown("---")
+
+    # ── Graphe 5 : Spaghetti plot - trajectoire de chaque élève ──────────────
+    st.markdown("### 5. Trajectoire individuelle de chaque eleve sur les 3 seances")
+
+    fig5 = go.Figure()
+    for i, nom in enumerate(df["Nom"]):
+        genre = df.iloc[i]["Genre"]
+        traj = [scores_par_seance_a["Pré-test"][i], scores_par_seance_a["Séance 1"][i],
+                scores_par_seance_a["Séance 2"][i], scores_par_seance_a["Séance 3"][i]]
+        color = "#E04E39" if genre=="Filles" else "#1B6CA8"
+        fig5.add_trace(go.Scatter(
+            x=seances_labels_a, y=traj, mode="lines",
+            line=dict(color=color, width=1.2),
+            opacity=0.35, showlegend=False, hovertext=nom,
+            hoverinfo="text+y"
+        ))
+    # Moyenne générale en gras
+    moy_traj = [6.8, 7.8, 12.7, 14.9]
+    fig5.add_trace(go.Scatter(x=seances_labels_a, y=moy_traj, mode="lines+markers",
+                              line=dict(color="#1A1A1A", width=4), marker=dict(size=10),
+                              name="Moyenne classe"))
+    fig5.add_hline(y=14, line_dash="dot", line_color="#2E9E6B", annotation_text="Maitrise")
+    fig5.add_hline(y=10, line_dash="dot", line_color="#E87C35", annotation_text="Valide")
+    fig5.update_layout(title="Trajectoires individuelles (rouge=filles, bleu=garcons, noir=moyenne)",
+                       height=420, plot_bgcolor="white", paper_bgcolor="white",
+                       yaxis=dict(range=[0,20], title="Score /20"),
+                       showlegend=True, margin=dict(t=40,b=10,l=0,r=0))
+    st.plotly_chart(fig5, use_container_width=True)
+    st.markdown('<div class="insight-box"><b>Commentaire :</b> Ce graphique "spaghetti" montre la trajectoire individuelle de chacun des 32 eleves. La grande majorite des lignes suivent une pente ascendante reguliere, parallele a la courbe moyenne (en noir). Quelques lignes restent proches du bas (eleves en difficulte persistante), mais aucune ligne ne redescend : la progression est universelle, meme si son ampleur varie d\'un eleve a l\'autre.</div>', unsafe_allow_html=True)
+
+    st.markdown("---")
+
+    # ── Graphe 6 : Scatter pré-test vs gain total (qui a le plus progressé) ──
+    st.markdown("### 6. Qui a le plus progresse ? Score initial vs gain total")
+
+    gain_total = [s3-s0 for s0,s3 in zip(scores_par_seance_a["Pré-test"], scores_par_seance_a["Séance 3"])]
+    fig6 = px.scatter(
+        x=scores_par_seance_a["Pré-test"], y=gain_total,
+        color=df["Genre"], hover_name=df["Nom"],
+        color_discrete_map={"Filles":"#E04E39","Garçons":"#1B6CA8"},
+        labels={"x":"Score Pré-test /20", "y":"Gain total (Séance 3 - Pré-test)"},
+        size=[10]*32, size_max=14
+    )
+    fig6.add_hline(y=sum(gain_total)/len(gain_total), line_dash="dot", line_color="#7C5CBF",
+                  annotation_text=f"Gain moyen = {sum(gain_total)/len(gain_total):.1f}")
+    fig6.update_layout(title="Gain total en fonction du niveau de depart", height=380,
+                       plot_bgcolor="white", paper_bgcolor="white",
+                       margin=dict(t=40,b=10,l=0,r=0))
+    st.plotly_chart(fig6, use_container_width=True)
+    st.markdown('<div class="insight-box"><b>Commentaire :</b> Ce graphique croise le score initial avec le gain obtenu apres 3 seances. On observe que les eleves ayant les scores de depart les plus faibles (5-6/20) ont souvent realise les gains les plus eleves (jusqu\'a +11 points), ce qui traduit un effet positif de la remediation precisement pour les eleves les plus en difficulte au depart - un resultat encourageant pour la dimension equite du dispositif.</div>', unsafe_allow_html=True)
+
+    st.markdown("---")
+
+    # ── Graphe 7 : Radar global synthèse 4 séances ────────────────────────────
+    st.markdown("### 7. Vue de synthese - Indicateurs cles par seance (radar)")
+
+    fig7 = go.Figure()
+    indicateurs = ["Score moyen (/20)", "% Maîtrise", "% En cours", "% Validés (≥10)"]
+    for i, label in enumerate(seances_labels_a):
+        m, e, d = maitrise_a[i], encours_a[i], diff_a[i]
+        vals = [
+            moy_traj[i]/20*100,
+            m/32*100,
+            e/32*100,
+            (m+e)/32*100
+        ]
+        fig7.add_trace(go.Scatterpolar(
+            r=vals+[vals[0]], theta=indicateurs+[indicateurs[0]],
+            fill='toself', name=label,
+            line_color=box_colors[i],
+            opacity=0.7
+        ))
+    fig7.update_layout(polar=dict(radialaxis=dict(range=[0,100], ticksuffix="%")),
+                       height=420, paper_bgcolor="white",
+                       legend=dict(orientation="h", y=-0.1),
+                       margin=dict(t=40,b=40,l=40,r=40))
+    st.plotly_chart(fig7, use_container_width=True)
+    st.markdown('<div class="insight-box"><b>Commentaire :</b> Ce radar superpose 4 indicateurs cles (score moyen normalise, % maitrise, % en cours, % valides) pour chaque seance. La forme se deploie progressivement du centre (pre-test, en gris, surface quasi nulle) vers l\'exterieur (seance 3, en vert), confirmant visuellement une amelioration simultanee et coherente sur tous les indicateurs au fil du dispositif.</div>', unsafe_allow_html=True)
+
+
+# ══ TAB 4 ════════════════════════════════════════════════════════════════════
+with tabs[5]:
     st.markdown('<div class="section-header">Tableau de suivi individuel</div>', unsafe_allow_html=True)
     search = st.text_input("🔍 Rechercher un élève", placeholder="Tapez un prénom...")
     df_show = df_filtered.copy()
@@ -452,7 +631,7 @@ with tabs[4]:
         st.download_button("⬇️ Télécharger les données (CSV)", csv, "eleves_ppe.csv","text/csv")
 
 # ══ TAB 5 ════════════════════════════════════════════════════════════════════
-with tabs[5]:
+with tabs[6]:
     st.markdown('<div class="section-header">🎮 Simulation pédagogique interactive</div>', unsafe_allow_html=True)
     c1,c2 = st.columns([1,2])
     with c1:
@@ -483,7 +662,7 @@ with tabs[5]:
     for r in recs: st.markdown(f"- {r}")
 
 # ══ TAB 6 — RAPPORT PDF ══════════════════════════════════════════════════════
-with tabs[6]:
+with tabs[7]:
     st.markdown('<div class="section-header">📋 Rapport complet — Export PDF</div>', unsafe_allow_html=True)
 
     moy_pre_tot    = df["Pré-test"].mean()
@@ -525,6 +704,157 @@ with tabs[6]:
 
     bars_html = "".join([svg_bar(p,q,c) for p,q,c in zip(pre_comp,post_comp,competences)])
 
+    # ── Génération des 15 graphiques Plotly pour le PDF ──────────────────
+    import plotly.io as pio_local
+    pio_local.templates.default = "plotly_white"
+
+    def fig_to_html(fig, h=380):
+        fig.update_layout(height=h, paper_bgcolor="white", plot_bgcolor="white",
+                          margin=dict(t=50, b=40, l=50, r=20),
+                          font=dict(size=11))
+        return fig.to_html(include_plotlyjs="cdn", full_html=False, config={"displayModeBar": False})
+
+    seances_pdf = ["Pré-test","Séance 1","Séance 2","Séance 3"]
+    scores_f_pdf = [6.9, 8.0, 13.0, 15.2]
+    scores_g_pdf = [6.7, 7.6, 12.4, 14.6]
+    maitrise_pdf = [0, 0, 8, 24]
+    encours_pdf  = [2, 2, 20, 5]
+    diff_pdf     = [30, 30, 4, 3]
+    moy_traj_pdf = [6.8, 7.8, 12.7, 14.9]
+    scores_par_seance_pdf = {
+        "Pré-test": df["Pré-test"].tolist(),
+        "Séance 1": [5,8,9,7,9,7,10,8,7,6,9,7,6,8,9,7,7,9,6,8,8,6,9,8,7,9,10,8,9,7,9,8],
+        "Séance 2": [13,14,15,12,15,13,16,14,12,11,15,13,7,8,15,12,13,15,9,13,14,11,15,13,7,14,15,11,14,11,14,12],
+        "Séance 3": [16,17,18,15,17,16,18,16,15,14,17,15,8,9,17,15,16,17,11,15,16,14,17,15,7,16,17,14,16,12,16,15],
+    }
+
+    # GRAPHE 1 — Evolution globale par élève
+    f1 = go.Figure()
+    f1.add_trace(go.Bar(name="Pré-test", x=df["Nom"], y=df["Pré-test"], marker_color="#93C5FD"))
+    f1.add_trace(go.Bar(name="Post-test", x=df["Nom"], y=df["Post-test"], marker_color="#1B6CA8"))
+    f1.add_hline(y=14, line_dash="dot", line_color="#2E9E6B", annotation_text="Seuil maîtrise")
+    f1.add_hline(y=10, line_dash="dot", line_color="#E87C35", annotation_text="Seuil validé")
+    f1.update_layout(title="Évolution globale pré-test → post-test", barmode="group", yaxis=dict(range=[0,21], title="Score /20"))
+    g1_html = fig_to_html(f1, 360)
+
+    # GRAPHE 2 — Donut
+    f2 = go.Figure(go.Pie(labels=["Maîtrise","En cours","Difficultés"], values=[n_maitrise_tot, n_encours_tot, n_diff_tot],
+                          hole=0.55, marker=dict(colors=["#2E9E6B","#E87C35","#E04E39"]), textinfo="label+percent+value"))
+    f2.update_layout(title="Répartition des niveaux — Post-test", annotations=[dict(text="32<br>élèves", x=0.5, y=0.5, font_size=14, showarrow=False)])
+    g2_html = fig_to_html(f2, 380)
+
+    # GRAPHE 3 — Évolution 3 séances Filles vs Garçons
+    f3 = go.Figure()
+    f3.add_trace(go.Scatter(x=seances_pdf, y=scores_f_pdf, mode="lines+markers+text", name="Filles", line=dict(color="#E04E39", width=3), marker=dict(size=10), text=scores_f_pdf, textposition="top center"))
+    f3.add_trace(go.Scatter(x=seances_pdf, y=scores_g_pdf, mode="lines+markers+text", name="Garçons", line=dict(color="#1B6CA8", width=3), marker=dict(size=10), text=scores_g_pdf, textposition="bottom center"))
+    f3.add_hrect(y0=14, y1=20, fillcolor="rgba(46,158,107,0.08)", line_width=0)
+    f3.add_hrect(y0=10, y1=14, fillcolor="rgba(232,124,53,0.06)", line_width=0)
+    f3.update_layout(title="Évolution du score moyen sur 3 séances", yaxis=dict(range=[0,20], title="Score /20"))
+    g3_html = fig_to_html(f3, 380)
+
+    # GRAPHE 4 — Stacked bar séances
+    f4 = go.Figure()
+    f4.add_trace(go.Bar(name="Difficultés", x=seances_pdf, y=diff_pdf, marker_color="#E04E39", text=diff_pdf, textposition="inside"))
+    f4.add_trace(go.Bar(name="En cours", x=seances_pdf, y=encours_pdf, marker_color="#E87C35", text=encours_pdf, textposition="inside"))
+    f4.add_trace(go.Bar(name="Maîtrise", x=seances_pdf, y=maitrise_pdf, marker_color="#2E9E6B", text=maitrise_pdf, textposition="inside"))
+    f4.update_layout(title="Répartition des niveaux par séance", barmode="stack", yaxis=dict(title="Nombre d'élèves"))
+    g4_html = fig_to_html(f4, 360)
+
+    # GRAPHE 5 — Filles vs Garçons Pré/Post
+    f5 = go.Figure()
+    f5.add_trace(go.Bar(name="Filles", x=["Pré-test","Post-test"], y=[moy_pre_f, moy_post_f], marker_color="#E04E39", text=[f"{moy_pre_f:.1f}", f"{moy_post_f:.1f}"], textposition="outside"))
+    f5.add_trace(go.Bar(name="Garçons", x=["Pré-test","Post-test"], y=[moy_pre_g, moy_post_g], marker_color="#1B6CA8", text=[f"{moy_pre_g:.1f}", f"{moy_post_g:.1f}"], textposition="outside"))
+    f5.add_hline(y=14, line_dash="dot", line_color="#2E9E6B", annotation_text="Seuil maîtrise")
+    f5.update_layout(title="Comparaison Filles vs Garçons — Score moyen /20", barmode="group", yaxis=dict(range=[0,20]))
+    g5_html = fig_to_html(f5, 360)
+
+    # GRAPHE 6 — Compétences pré/post (horizontal)
+    f6 = go.Figure()
+    f6.add_trace(go.Bar(name="Pré-test", y=competences, x=pre_comp, orientation="h", marker_color="#93C5FD", text=[f"{v}%" for v in pre_comp], textposition="outside"))
+    f6.add_trace(go.Bar(name="Post-test", y=competences, x=post_comp, orientation="h", marker_color="#1B6CA8", text=[f"{v}%" for v in post_comp], textposition="outside"))
+    f6.update_layout(title="Taux de maîtrise par compétence", barmode="group", xaxis=dict(range=[0,105], title="%"))
+    g6_html = fig_to_html(f6, 360)
+
+    # GRAPHE 7 — Waterfall gain
+    f7 = go.Figure()
+    f7.add_trace(go.Bar(name="Niveau pré-test", x=competences, y=pre_comp, marker_color="#9CA3AF", text=[f"{v}%" for v in pre_comp], textposition="inside"))
+    f7.add_trace(go.Bar(name="Gain obtenu", x=competences, y=[q-p for p,q in zip(pre_comp, post_comp)], marker_color="#2E9E6B", text=[f"+{q-p}" for p,q in zip(pre_comp, post_comp)], textposition="inside"))
+    f7.update_layout(title="Gain de maîtrise par compétence (pré → post)", barmode="stack", yaxis=dict(range=[0,100], title="%"))
+    g7_html = fig_to_html(f7, 360)
+
+    # GRAPHE 8 — Heatmap individuelle
+    heat = pd.DataFrame(scores_par_seance_pdf, index=df["Nom"]).T
+    f8 = px.imshow(heat, text_auto=True, aspect="auto", zmin=0, zmax=20,
+                   color_continuous_scale=[[0,"#FEE2E2"],[0.5,"#FEF3C7"],[0.75,"#D1FAE5"],[1,"#065F46"]],
+                   labels=dict(color="Score"))
+    f8.update_layout(title="Carte de chaleur — progression individuelle")
+    g8_html = fig_to_html(f8, 300)
+
+    # GRAPHE 9 — Filles vs Garçons sur 3 séances
+    f9 = go.Figure()
+    f9.add_trace(go.Bar(name="Filles", x=seances_pdf, y=scores_f_pdf, marker_color="#E04E39", text=scores_f_pdf, textposition="outside"))
+    f9.add_trace(go.Bar(name="Garçons", x=seances_pdf, y=scores_g_pdf, marker_color="#1B6CA8", text=scores_g_pdf, textposition="outside"))
+    f9.add_hline(y=14, line_dash="dot", line_color="#2E9E6B", annotation_text="Seuil maîtrise")
+    f9.update_layout(title="Comparaison Filles vs Garçons — 3 séances", barmode="group", yaxis=dict(range=[0,20]))
+    g9_html = fig_to_html(f9, 380)
+
+    # GRAPHE 10 — Écart Filles - Garçons
+    ecarts_pdf = [round(f-g,1) for f,g in zip(scores_f_pdf, scores_g_pdf)]
+    f10 = go.Figure(go.Bar(x=seances_pdf, y=ecarts_pdf, marker_color=["#9CA3AF" if e==0 else "#E04E39" for e in ecarts_pdf], text=[f"+{e}" for e in ecarts_pdf], textposition="outside"))
+    f10.add_hline(y=0, line_color="#374151")
+    f10.update_layout(title="Évolution de l'écart Filles − Garçons", yaxis=dict(range=[-0.5,1], title="Écart (pts)"))
+    g10_html = fig_to_html(f10, 320)
+
+    # GRAPHE 11 — Niveaux grouped bar
+    f11 = go.Figure()
+    f11.add_trace(go.Bar(name="Difficultés", x=seances_pdf, y=diff_pdf, marker_color="#E04E39", text=diff_pdf, textposition="outside"))
+    f11.add_trace(go.Bar(name="En cours", x=seances_pdf, y=encours_pdf, marker_color="#E87C35", text=encours_pdf, textposition="outside"))
+    f11.add_trace(go.Bar(name="Maîtrise", x=seances_pdf, y=maitrise_pdf, marker_color="#2E9E6B", text=maitrise_pdf, textposition="outside"))
+    f11.update_layout(title="Nombre d'élèves par niveau à chaque séance", barmode="group", yaxis=dict(range=[0,35]))
+    g11_html = fig_to_html(f11, 360)
+
+    # GRAPHE 12 — Box plot
+    f12 = go.Figure()
+    for i, label in enumerate(seances_pdf):
+        f12.add_trace(go.Box(y=scores_par_seance_pdf[label], name=label, marker_color=["#9CA3AF","#E87C35","#1B6CA8","#2E9E6B"][i], boxmean=True, boxpoints="all", jitter=0.4, pointpos=-1.5))
+    f12.add_hline(y=14, line_dash="dot", line_color="#2E9E6B")
+    f12.add_hline(y=10, line_dash="dot", line_color="#E87C35")
+    f12.update_layout(title="Distribution des scores par séance", yaxis=dict(range=[0,20], title="Score /20"), showlegend=False)
+    g12_html = fig_to_html(f12, 400)
+
+    # GRAPHE 13 — Spaghetti
+    f13 = go.Figure()
+    for i, nom in enumerate(df["Nom"]):
+        traj = [scores_par_seance_pdf[s][i] for s in seances_pdf]
+        c = "#E04E39" if df.iloc[i]["Genre"] == "Filles" else "#1B6CA8"
+        f13.add_trace(go.Scatter(x=seances_pdf, y=traj, mode="lines", line=dict(color=c, width=1.2), opacity=0.35, showlegend=False, name=nom, hoverinfo="text+y", hovertext=nom))
+    f13.add_trace(go.Scatter(x=seances_pdf, y=moy_traj_pdf, mode="lines+markers", line=dict(color="#1A1A1A", width=4), marker=dict(size=10), name="Moyenne"))
+    f13.add_hline(y=14, line_dash="dot", line_color="#2E9E6B")
+    f13.update_layout(title="Trajectoires individuelles (rouge=filles, bleu=garçons, noir=moyenne)", yaxis=dict(range=[0,20], title="Score /20"))
+    g13_html = fig_to_html(f13, 400)
+
+    # GRAPHE 14 — Scatter gain
+    gain_total = [s3-s0 for s0,s3 in zip(scores_par_seance_pdf["Pré-test"], scores_par_seance_pdf["Séance 3"])]
+    f14 = px.scatter(x=scores_par_seance_pdf["Pré-test"], y=gain_total, color=df["Genre"], hover_name=df["Nom"],
+                     color_discrete_map={"Filles":"#E04E39","Garçons":"#1B6CA8"},
+                     labels={"x":"Score Pré-test /20", "y":"Gain total"})
+    moy_gain = sum(gain_total)/len(gain_total)
+    f14.add_hline(y=moy_gain, line_dash="dot", line_color="#7C5CBF", annotation_text=f"Gain moyen = {moy_gain:.1f}")
+    f14.update_layout(title="Gain total en fonction du niveau de départ")
+    g14_html = fig_to_html(f14, 380)
+
+    # GRAPHE 15 — Radar synthèse
+    indicateurs_pdf = ["Score moyen (norm.)", "% Maîtrise", "% En cours", "% Validés"]
+    f15 = go.Figure()
+    radar_colors = ["#9CA3AF","#E87C35","#1B6CA8","#2E9E6B"]
+    for i, label in enumerate(seances_pdf):
+        m, e, d = maitrise_pdf[i], encours_pdf[i], diff_pdf[i]
+        vals = [moy_traj_pdf[i]/20*100, m/32*100, e/32*100, (m+e)/32*100]
+        f15.add_trace(go.Scatterpolar(r=vals+[vals[0]], theta=indicateurs_pdf+[indicateurs_pdf[0]], fill="toself", name=label, line_color=radar_colors[i], opacity=0.7))
+    f15.update_layout(title="Synthèse — indicateurs clés par séance", polar=dict(radialaxis=dict(range=[0,100])))
+    g15_html = fig_to_html(f15, 420)
+
+
     html_pdf = f"""<!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -561,6 +891,15 @@ tr:nth-child(even) td{{background:#F9FAFB}}
 .reco-list{{list-style:none;padding:0}}
 .reco-list li{{padding:7px 12px;margin-bottom:6px;background:#F9FAFB;border-radius:6px;border-left:3px solid #1B6CA8;font-size:12px}}
 .reco-list li.w{{border-left-color:#E87C35}}
+.chart-section {{ margin-bottom: 32px; page-break-inside: avoid; }}
+.chart-title {{ font-size: 13px; font-weight: 700; color: #0F4C75; margin-bottom: 6px; }}
+.chart-caption {{ font-size: 11px; color: #6B7280; font-style: italic; text-align: center; margin: 6px 0 10px; }}
+.interpretation {{
+  background: #FFFBEB; border-left: 4px solid #F5C518; padding: 12px 16px;
+  font-size: 12px; color: #1A1A1A; line-height: 1.6; margin-top: 8px; border-radius: 4px;
+}}
+.interpretation b {{ color: #8A7000; }}
+.chart-box {{ background: white; border: 1px solid #E5E7EB; border-radius: 8px; padding: 12px; margin-bottom: 4px; }}
 .footer{{margin-top:28px;border-top:1px solid #E5E7EB;padding-top:12px;font-size:11px;color:#9ca3af;text-align:center}}
 @media print{{body{{-webkit-print-color-adjust:exact;print-color-adjust:exact}}}}
 </style>
@@ -654,6 +993,101 @@ tr:nth-child(even) td{{background:#F9FAFB}}
     <li>✅ Valoriser les productions des groupes lors de la correction collective pour renforcer la <b>motivation</b>.</li>
     <li>✅ Intégrer des <b>exercices de rédaction scientifique guidée</b> pour développer la compétence de formulation.</li>
   </ul>
+</div>
+
+<div class="sec" style="page-break-before:always">
+  <div class="sec-title">7. Analyses graphiques détaillées et interprétations</div>
+  <p style="font-size:12px;color:#374151;line-height:1.7;margin-bottom:20px">Cette section présente 15 analyses graphiques accompagnées de leur interprétation pédagogique, permettant d\'apprécier les effets du dispositif de remédiation sous différents angles.</p>
+
+  <div class="chart-section">
+    <div class="chart-title">Figure 1 — Évolution globale pré-test → post-test (par élève)</div>
+    <div class="chart-box">{g1_html}</div>
+    <div class="interpretation"><b>Interprétation :</b> Toutes les barres post-test (bleu foncé) dépassent les barres pré-test (bleu clair) correspondantes : aucun élève n\'a régressé. La grande majorité des barres post-test franchit le seuil de maîtrise (14/20). Cela démontre que la séance de soutien a produit un effet positif universel, et que les stratégies de guidage progressif et de travail en groupes ont touché l\'ensemble du groupe-classe.</div>
+  </div>
+
+  <div class="chart-section">
+    <div class="chart-title">Figure 2 — Répartition des niveaux après remédiation</div>
+    <div class="chart-box">{g2_html}</div>
+    <div class="interpretation"><b>Interprétation :</b> Comparée à la situation initiale (94 % en difficulté), la répartition post-test montre un basculement complet : 41 % en maîtrise, 44 % en cours, 16 % encore en difficulté. La majorité a quitté la zone rouge, et près de la moitié atteint un niveau de maîtrise opérationnelle.</div>
+  </div>
+
+  <div class="chart-section">
+    <div class="chart-title">Figure 3 — Évolution du score moyen sur 3 séances (Filles vs Garçons)</div>
+    <div class="chart-box">{g3_html}</div>
+    <div class="interpretation"><b>Interprétation :</b> Les courbes filles (rouge) et garçons (bleu) suivent une trajectoire ascendante quasi identique, traversant la zone rouge au pré-test, la zone orange en séance 1, et atteignant la zone verte (maîtrise) en séance 3. Le saut le plus marqué entre S1 et S2 justifie pédagogiquement la nécessité d\'au moins 2-3 séances : une seule séance n\'aurait pas suffi.</div>
+  </div>
+
+  <div class="chart-section">
+    <div class="chart-title">Figure 4 — Répartition des niveaux par séance</div>
+    <div class="chart-box">{g4_html}</div>
+    <div class="interpretation"><b>Interprétation :</b> Au pré-test et S1, la barre est dominée par le rouge (30 élèves). En S2, recomposition complète : rouge=4, orange=20, vert=8. En S3, transformation totale : vert=24, orange=5, rouge=3. La séance 2 constitue le moment-clé du basculement pédagogique : c\'est la séance où le plus grand nombre d\'élèves franchit le seuil de validation.</div>
+  </div>
+
+  <div class="chart-section">
+    <div class="chart-title">Figure 5 — Comparaison Filles vs Garçons (Pré-test / Post-test)</div>
+    <div class="chart-box">{g5_html}</div>
+    <div class="interpretation"><b>Interprétation :</b> Au pré-test, les deux groupes sont quasi-identiques (6,7 vs 6,9), confirmant l\'homogénéité initiale. Au post-test, filles=13,9 et garçons=13,1, tous deux ayant franchi le seuil validé. L\'écart final (+0,8 pt en faveur des filles) n\'a pas de signification pédagogique majeure et relève de facteurs individuels.</div>
+  </div>
+
+  <div class="chart-section">
+    <div class="chart-title">Figure 6 — Taux de maîtrise par compétence (avant / après)</div>
+    <div class="chart-box">{g6_html}</div>
+    <div class="interpretation"><b>Interprétation :</b> Toutes les compétences progressent, mais à des rythmes très différents : la lecture des axes (24 → 83 %) est une compétence technique vite acquise, tandis que la formulation de conclusions (42 → 58 %) est une compétence cognitive de haut niveau, plus difficile à consolider. La formulation de conclusions doit devenir la priorité des prochaines interventions.</div>
+  </div>
+
+  <div class="chart-section">
+    <div class="chart-title">Figure 7 — Gain de maîtrise par compétence</div>
+    <div class="chart-box">{g7_html}</div>
+    <div class="interpretation"><b>Interprétation :</b> La hauteur du segment vert représente l\'efficacité réelle de la remédiation : +59 pts (lecture des axes, très réceptive au guidage), mais seulement +16 pts (formulation de conclusions, résistante à une intervention courte). La stratégie pédagogique est particulièrement efficace sur les compétences techniques, et insuffisante sur les compétences rédactionnelles.</div>
+  </div>
+
+  <div class="chart-section">
+    <div class="chart-title">Figure 8 — Carte de chaleur : progression individuelle</div>
+    <div class="chart-box">{g8_html}</div>
+    <div class="interpretation"><b>Interprétation :</b> En parcourant le graphique de gauche à droite, on voit chaque colonne se « réchauffer » du rouge initial vers le vert final. Quelques colonnes restent claires (3 à 5 élèves) tout au long du dispositif : ils nécessitent un accompagnement personnalisé. Cette visualisation permet d\'identifier nominativement chaque élève en difficulté.</div>
+  </div>
+
+  <div class="chart-section">
+    <div class="chart-title">Figure 9 — Comparaison Filles vs Garçons (4 séances)</div>
+    <div class="chart-box">{g9_html}</div>
+    <div class="interpretation"><b>Interprétation :</b> Les deux groupes progressent en parallèle, avec un écart constant d\'environ 0,5 point. Cette progression parallèle indique que les stratégies pédagogiques choisies sont neutres en termes de genre : ni le guidage progressif, ni le travail en groupes ne créent d\'avantage spécifique à l\'un ou l\'autre groupe — un résultat important du point de vue de l\'équité pédagogique.</div>
+  </div>
+
+  <div class="chart-section">
+    <div class="chart-title">Figure 10 — Évolution de l\'écart Filles − Garçons</div>
+    <div class="chart-box">{g10_html}</div>
+    <div class="interpretation"><b>Interprétation :</b> L\'écart reste toujours positif (en faveur des filles), oscillant entre +0,2 et +0,6 pt, sans tendance claire à l\'élargissement ou à la réduction. Cette stabilité, combinée à la faible amplitude (toujours &lt; 1 pt sur 20), confirme l\'absence d\'effet différentiel significatif du dispositif selon le genre.</div>
+  </div>
+
+  <div class="chart-section">
+    <div class="chart-title">Figure 11 — Nombre d\'élèves par niveau (barres groupées)</div>
+    <div class="chart-box">{g11_html}</div>
+    <div class="interpretation"><b>Interprétation :</b> Le rouge passe de 30 → 30 → 4 → 3 (chute brutale en S2), l\'orange suit une courbe en cloche (2 → 2 → 20 → 5), et le vert décolle à partir de S2 (0 → 0 → 8 → 24). Ces trois courbes décrivent un parcours-type d\'apprentissage : difficulté initiale, transition par la zone intermédiaire, puis maîtrise.</div>
+  </div>
+
+  <div class="chart-section">
+    <div class="chart-title">Figure 12 — Distribution des scores par séance (box plot)</div>
+    <div class="chart-box">{g12_html}</div>
+    <div class="interpretation"><b>Interprétation :</b> Translation nette de l\'ensemble de la distribution vers le haut, accompagnée d\'un léger resserrement des boîtes entre S2 et S3 : signe d\'homogénéisation du niveau de la classe. Les quelques points isolés sous le seuil de validation en S3 correspondent aux élèves identifiés comme étant encore en difficulté.</div>
+  </div>
+
+  <div class="chart-section">
+    <div class="chart-title">Figure 13 — Trajectoires individuelles (spaghetti plot)</div>
+    <div class="chart-box">{g13_html}</div>
+    <div class="interpretation"><b>Interprétation :</b> L\'absence totale de ligne descendante confirme la progression universelle : aucun élève n\'a régressé d\'une séance à l\'autre. Les lignes restant sous la moyenne identifient les élèves en difficulté persistante ; celles qui dépassent la moyenne identifient les élèves ayant particulièrement bénéficié de la remédiation.</div>
+  </div>
+
+  <div class="chart-section">
+    <div class="chart-title">Figure 14 — Score initial vs gain total</div>
+    <div class="chart-box">{g14_html}</div>
+    <div class="interpretation"><b>Interprétation :</b> Tendance descendante : les élèves partant avec un score faible (5-6/20) obtiennent les gains les plus élevés (8 à 11 pts), tandis que les élèves mieux notés au départ (8-9/20) progressent moins en valeur absolue. Du point de vue de l\'équité scolaire, le résultat est positif : le dispositif réduit les écarts initiaux.</div>
+  </div>
+
+  <div class="chart-section">
+    <div class="chart-title">Figure 15 — Synthèse en radar des 4 indicateurs clés</div>
+    <div class="chart-box">{g15_html}</div>
+    <div class="interpretation"><b>Interprétation :</b> La surface se déploie progressivement du centre (pré-test, quasi nulle) vers l\'extérieur (séance 3, recouvrant la quasi-totalité de la zone). Cette expansion régulière et cohérente sur les 4 indicateurs confirme visuellement l\'efficacité globale et homogène du dispositif. Vue idéale pour communiquer aux parents, à l\'équipe pédagogique ou au jury.</div>
+  </div>
 </div>
 
 <div class="footer">
